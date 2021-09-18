@@ -70,6 +70,10 @@ app.get("/", (req, res) => {
   });
 });
 
+const { promisify } = require("util");
+
+const unlinkAsync = promisify(fs.unlink);
+
 app.post("/", upload.single("image"), (req, res, next) => {
   var obj = {
     name: req.body.name,
@@ -89,6 +93,7 @@ app.post("/", upload.single("image"), (req, res, next) => {
       res.redirect("/");
     }
   });
+  unlinkAsync(req.file.path);
 });
 
 /// Template Stuff
