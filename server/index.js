@@ -3,7 +3,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 
 const { MongoClient } = require('mongodb');
-const uri = "mongodb+srv://sergiu:123@cluster0.dfh1s.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+const uri = "mongodb://localhost"; // replace
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 async function insertIntoMongoCollection(obj) {
@@ -33,7 +33,6 @@ app.get('/', (req, res) => {
 })
 
 app.listen(apiPort, () => console.log(`Server running on port ${apiPort}`))
-
 
 test_obj = {"pic_url": "", "likes": 3, "dislikes": 2, "comments": []}
 insertIntoMongoCollection(test_obj);
