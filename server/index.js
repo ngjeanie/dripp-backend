@@ -67,7 +67,7 @@ function incrementReactionCount(pic_uri, reaction_column_name, callback) {
 }
 
 const app = express()
-const apiPort = 5000
+const apiPort = (process.env.PORT || 5000)
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
