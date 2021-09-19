@@ -72,7 +72,7 @@ function incrementReactionCount(id, reaction_column_name, callback) {
 }
 
 const app = express();
-const apiPort = 3000;
+const apiPort = process.env.PORT || 5000;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
