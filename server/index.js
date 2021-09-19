@@ -194,10 +194,11 @@ const { promisify } = require("util");
 const unlinkAsync = promisify(fs.unlink);
 
 // Upload an image
-app.post("/upload", upload.single("image"), (req, res, next) => {
+app.post("/upload/:user_id", upload.single("image"), (req, res, next) => {
   console.log(req.body);
 
   var obj = {
+    user_id: req.params.user_id,
     img: {
       data: fs.readFileSync(
         path.join(__dirname + "/uploads/" + req.file.filename)
