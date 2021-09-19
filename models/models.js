@@ -9,6 +9,7 @@ const imageSchema = new mongoose.Schema({
     contentType: String,
   },
   expires: Date,
+  caption: String,
   likes: Number,
   dislikes: Number,
   comments: Array,

@@ -204,6 +204,7 @@ app.post("/upload/:user_id", upload.single("image"), (req, res, next) => {
       contentType: "image/jpeg",
     },
     expires: req.body.expires,
+    caption: req.body.caption,
     likes: 0,
     dislikes: 0,
     comments: [],
