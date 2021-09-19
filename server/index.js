@@ -170,9 +170,7 @@ mongoose.connect(
 
 // Store image on disk
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads");
-  },
+  destination: "/workspace/server/uploads",
   filename: (req, file, cb) => {
     cb(null, file.fieldname + "-" + Date.now());
   },
@@ -201,7 +199,7 @@ app.post("/upload/:user_id", upload.single("image"), (req, res, next) => {
     user_id: req.params.user_id,
     img: {
       data: fs.readFileSync(
-        path.join(__dirname + "/uploads/" + req.file.filename)
+        path.join("/workspace/server/uploads/" + req.file.filename)
       ),
       contentType: "image/jpeg",
     },
@@ -220,7 +218,7 @@ app.post("/upload/:user_id", upload.single("image"), (req, res, next) => {
     }
   });
 
-  // unlinkAsync(req.file.path);
+  unlinkAsync(req.file.path);
 });
 
 app.listen(apiPort, () => console.log(`Server running on port ${apiPort}`));
