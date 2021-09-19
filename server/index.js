@@ -1,10 +1,20 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const mongoose = require("mongoose");
 
 const { MongoClient } = require('mongodb');
-const uri = pass;
+const uri = "mongodb+srv://sergiu:123@cluster0.dfh1s.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+// File System Module
+const fs = require("fs");
+
+// Utilities for working with file and directory paths
+const path = require("path");
+
+// Middleware Multer to upload the photo to the server in a folder called `uploads` so we can process it
+const multer = require("multer");
 
 async function insertIntoMongoCollection(obj) {
     client.connect(err => {
@@ -125,4 +135,73 @@ app.post('/hash_tag/:pic_id', (req, res) => {
     });
 })
 
-app.listen(apiPort, () => console.log(`Server running on port ${apiPort}`))
+
+// Create connection to database
+mongoose.connect(
+  "mongodb+srv://sergiu:123@cluster0.dfh1s.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+  { useNewUrlParser: true, useUnifiedTopology: true },
+  (err) => {
+    console.log("connected");
+  }
+);
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads");
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + "-" + Date.now());
+  },
+});
+
+var upload = multer({ storage: storage });
+
+// Load imageModel
+var imgModel = require("../models/models.js");
+
+app.get("/", (req, res) => {
+  imgModel.find({}, (err, items) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("An error occurred", err);
+    } else {
+      res.render("imagesPage", { items: items });
+    }
+  });
+});
+
+const { promisify } = require("util");
+
+const unlinkAsync = promisify(fs.unlink);
+
+app.post("/", upload.single("image"), (req, res, next) => {
+  var obj = {
+    name: req.body.name,
+    desc: req.body.desc,
+    img: {
+      data: fs.readFileSync(
+        path.join(__dirname + "/uploads/" + req.file.filename)
+      ),
+      contentType: "image/png",
+    },
+  };
+  imgModel.create(obj, (err, item) => {
+    if (err) {
+      console.log(err);
+    } else {
+      // item.save();
+      res.redirect("/");
+    }
+  });
+  unlinkAsync(req.file.path);
+});
+
+/// Template Stuff
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// Set EJS as templating engine
+app.set("view engine", "ejs");
+
+app.listen(apiPort, () => console.log(`Server running on port ${apiPort}`));
+
