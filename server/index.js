@@ -117,9 +117,9 @@ app.post('/hash_tag/:pic_id', (req, res) => {
                 throw err;
             }
             
-            new_comment = req.body.new_comment;
+            new_tag = req.body.new_tag;
             collection.updateOne({ _id : oid }, {$push : {
-                comments : new_comment
+                hash_tags : new_tag
             }});
         }); 
     });
