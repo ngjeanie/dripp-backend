@@ -1,4 +1,5 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
 const { MongoClient } = require("mongodb");
@@ -35,13 +36,14 @@ async function insertIntoMongoCollection(obj) {
 }
 
 // Support incrementing either the like or dislike counts
-function incrementReactionCount(pic_uri, reaction_column_name, callback) {
+function incrementReactionCount(id, reaction_column_name, callback) {
   client.connect((err) => {
     const collection = client.db("myFirstDatabase").collection("images");
 
     // First retrieve the current number of likes
     var mongo = require("mongodb");
-    var oid = new mongo.ObjectID(pic_uri);
+    var oid = new mongo.ObjectId(id);
+    console.log(oid);
     collection.findOne({ _id: oid }, { _id: 0 }, (err, react_res) => {
       if (err) {
         console.log("error finding object :(");
@@ -57,13 +59,12 @@ function incrementReactionCount(pic_uri, reaction_column_name, callback) {
       collection
         .updateOne({ _id: oid }, update_form)
         .then((obj) => {
-          console.log("updated the ${reaction_column_name} count!");
+          console.log(`updated the ${reaction_column_name} count!`);
           client.close();
         })
         .catch((reason) => {
           console.log("update failed :(", reason);
         });
-
       updated_num_reacts;
       callback(updated_num_reacts);
     }); // Select the likes from matching object
@@ -73,11 +74,14 @@ function incrementReactionCount(pic_uri, reaction_column_name, callback) {
 const app = express();
 const apiPort = 3000;
 
-app.get("/like/:pic_id", (req, res) => {
-  pic_uri = req.params.pic_id;
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+app.get("/like/:id", (req, res) => {
+  id = req.params.id;
 
   updated_num_likes = incrementReactionCount(
-    pic_uri,
+    id,
     "likes",
     (updated_num_likes) => {
       res.send(updated_num_likes.toString());
@@ -85,11 +89,11 @@ app.get("/like/:pic_id", (req, res) => {
   );
 });
 
-app.get("/dislike/:pic_id", (req, res) => {
-  pic_uri = req.params.pic_id;
+app.get("/dislike/:id", (req, res) => {
+  id = req.params.id;
 
   updated_num_likes = incrementReactionCount(
-    pic_uri,
+    id,
     "dislikes",
     (updated_num_likes) => {
       res.send(updated_num_likes.toString());
@@ -97,20 +101,22 @@ app.get("/dislike/:pic_id", (req, res) => {
   );
 });
 
-app.post("/comment/:pic_id", (req, res) => {
-  client.connect((err) => {
-    const collection = client.db("sergiu_test").collection("drip_picture");
+app.post("/comment/:id", (req, res) => {
+  var new_comment = req.body.new_comment;
+  console.log(new_comment);
 
-    // First retrieve the current number of like
+  client.connect((err) => {
+    const collection = client.db("myFirstDatabase").collection("images");
+
     var mongo = require("mongodb");
-    var oid = new mongo.ObjectID(pic_uri);
+    var oid = new mongo.ObjectId(req.params.id);
+
     collection.findOne({ _id: oid }, { _id: 0 }, (err, react_res) => {
       if (err) {
         console.log("error finding object :(");
         throw err;
       }
 
-      new_comment = req.body.new_comment;
       collection.updateOne(
         { _id: oid },
         {
@@ -121,22 +127,25 @@ app.post("/comment/:pic_id", (req, res) => {
       );
     });
   });
+  res.send(new_comment);
 });
 
-app.post("/hash_tag/:pic_id", (req, res) => {
-  client.connect((err) => {
-    const collection = client.db("sergiu_test").collection("drip_picture");
+app.post("/hash_tag/:id", (req, res) => {
+  var new_tag = req.body.new_tag;
+  console.log(new_tag);
 
-    // First retrieve the current number of like
+  client.connect((err) => {
+    const collection = client.db("myFirstDatabase").collection("images");
+
     var mongo = require("mongodb");
-    var oid = new mongo.ObjectID(pic_uri);
+    var oid = new mongo.ObjectId(req.params.id);
     collection.findOne({ _id: oid }, { _id: 0 }, (err, react_res) => {
       if (err) {
         console.log("error finding object :(");
         throw err;
       }
 
-      new_tag = req.body.new_tag;
+      var new_tag = req.body.new_tag;
       collection.updateOne(
         { _id: oid },
         {
@@ -147,6 +156,7 @@ app.post("/hash_tag/:pic_id", (req, res) => {
       );
     });
   });
+  res.send(new_tag);
 });
 
 // Create connection to database
@@ -158,6 +168,7 @@ mongoose.connect(
   }
 );
 
+// Store image on disk
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads");
@@ -182,8 +193,10 @@ app.get("/images", (req, res) => {
 const { promisify } = require("util");
 const unlinkAsync = promisify(fs.unlink);
 
-// Upload image
-app.post("/upload/:expires", upload.single("image"), (req, res, next) => {
+// Upload an image
+app.post("/upload", upload.single("image"), (req, res, next) => {
+  console.log(req.body);
+
   var obj = {
     img: {
       data: fs.readFileSync(
