@@ -220,7 +220,7 @@ app.post("/upload/:user_id", upload.single("image"), (req, res, next) => {
     }
   });
 
-  unlinkAsync(req.file.path);
+  // unlinkAsync(req.file.path);
 });
 
 app.listen(apiPort, () => console.log(`Server running on port ${apiPort}`));
