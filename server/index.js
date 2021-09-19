@@ -159,7 +159,7 @@ var upload = multer({ storage: storage });
 // Load imageModel
 var imgModel = require("../models/models.js");
 
-app.get("/", (req, res) => {
+app.get("/upload", (req, res) => {
   imgModel.find({}, (err, items) => {
     if (err) {
       console.log(err);
@@ -174,7 +174,7 @@ const { promisify } = require("util");
 
 const unlinkAsync = promisify(fs.unlink);
 
-app.post("/", upload.single("image"), (req, res, next) => {
+app.post("/upload", upload.single("image"), (req, res, next) => {
   var obj = {
     name: req.body.name,
     desc: req.body.desc,
